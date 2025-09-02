@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Contratos - Matriz</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Control de Contratos</h1>
+            <p>Sistema de gestión y control de contratos</p>
+        </header>
+
+        <div class="controls">
+            <button id="btnNuevoContrato" class="btn btn-primary">Nuevo Contrato</button>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar contratos...">
+            </div>
+        </div>
+
+        <!-- Modal para agregar/editar contrato -->
+        <div id="modalContrato" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modalTitle">Nuevo Contrato</h2>
+                <form id="contratoForm">
+                    <div class="form-group">
+                        <label for="numeroContrato">Número de Contrato:</label>
+                        <input type="text" id="numeroContrato" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombreCliente">Cliente:</label>
+                        <input type="text" id="nombreCliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción:</label>
+                        <textarea id="descripcion" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="fechaInicio">Fecha de Inicio:</label>
+                        <input type="date" id="fechaInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fechaFin">Fecha de Fin:</label>
+                        <input type="date" id="fechaFin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="monto">Monto:</label>
+                        <input type="number" id="monto" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estado">Estado:</label>
+                        <select id="estado" required>
+                            <option value="activo">Activo</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="finalizado">Finalizado</option>
+                            <option value="cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de contratos -->
+        <div class="tabla-container">
+            <table id="tablaContratos">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Cliente</th>
+                        <th>Descripción</th>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaContratosBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="noContratos" class="no-data" style="display: none;">
+            <p>No hay contratos registrados. Haga clic en "Nuevo Contrato" para agregar uno.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
