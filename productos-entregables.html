@@ -1,0 +1,76 @@
+<form id="formProductosEntregables" autocomplete="off">
+  <h3>Productos Entregables</h3>
+  <label>No. Contrato:<br>
+    <select id="noContratoProductosEntregables" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Producto Entregable:<br>
+    <input type="text" id="productoEntregable" required>
+  </label><br><br>
+  <label>No. Memorando Entrada:<br>
+    <input type="number" id="noMemorandoEntradaProducto" min="1" required>
+  </label><br><br>
+  <label>Fecha:<br>
+    <input type="date" id="fechaProductoEntregable" required>
+  </label><br><br>
+  <button type="submit">Guardar Producto Entregable</button>
+</form>
+<div id="msgProductosEntregables"></div>
+<hr>
+<h3>Productos Entregables guardados</h3>
+<table id="tablaProductosEntregables" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+  <thead>
+    <tr>
+      <th>No. Contrato</th>
+      <th>Producto Entregable</th>
+      <th>No. Memorando Entrada</th>
+      <th>Fecha</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  // Cargar contratos en el select
+  function cargarContratosProductosEntregables() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoProductosEntregables');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  cargarContratosProductosEntregables();
+
+  // Mostrar tabla de productos entregables
+  function mostrarTablaProductosEntregables() {
+    let productos = JSON.parse(localStorage.getItem('productosEntregables') || "[]");
+    const tbody = document.querySelector('#tablaProductosEntregables tbody');
+    tbody.innerHTML = productos.map(p => `
+      <tr>
+        <td>${p.noContrato}</td>
+        <td>${p.productoEntregable}</td>
+        <td>${p.noMemorandoEntrada}</td>
+        <td>${p.fecha}</td>
+      </tr>
+    `).join('');
+  }
+  mostrarTablaProductosEntregables();
+
+  // Guardar producto entregable en localStorage
+  document.getElementById('formProductosEntregables').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      noContrato: document.getElementById('noContratoProductosEntregables').value,
+      productoEntregable: document.getElementById('productoEntregable').value.trim(),
+      noMemorandoEntrada: document.getElementById('noMemorandoEntradaProducto').value,
+      fecha: document.getElementById('fechaProductoEntregable').value
+    };
+    let productos = JSON.parse(localStorage.getItem('productosEntregables') || "[]");
+    productos.push(datos);
+    localStorage.setItem('productosEntregables', JSON.stringify(productos));
+    document.getElementById('msgProductosEntregables').innerHTML = `<b>Producto Entregable guardado correctamente.</b>`;
+    document.getElementById('formProductosEntregables').reset();
+    cargarContratosProductosEntregables();
+    mostrarTablaProductosEntregables();
+  };
+</script>

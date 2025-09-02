@@ -1,0 +1,106 @@
+<form id="formSocialIDU" autocomplete="off">
+  <h3>Social IDU</h3>
+  <label>No. Contrato:<br>
+    <select id="contratoSocialIDU" required></select>
+  </label><br><br>
+
+  <label>Cédula Social IDU:<br>
+    <select id="cedulaSocialIDU" required></select>
+  </label><br><br>
+
+  <label>No. Radicado Designación:<br>
+    <input type="number" id="noRadicadoDesignacion" min="0" required>
+  </label><br><br>
+
+  <label>Fecha Designación:<br>
+    <input type="date" id="fechaDesignacion" required>
+  </label><br><br>
+
+  <label>Celular:<br>
+    <input type="text" id="celularSocialIDU" required maxlength="15">
+    <span id="errorCelularIDU" style="color:red;display:none;"></span>
+  </label><br><br>
+
+  <label>Activo:<br>
+    <select id="activoSocialIDU" required>
+      <option value="">Seleccione...</option>
+      <option value="Sí">Sí</option>
+      <option value="No">No</option>
+    </select>
+  </label><br><br>
+
+  <button type="submit">Asociar Social IDU</button>
+</form>
+<div id="msgSocialIDU"></div>
+
+<script>
+  function cargarContratos() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('contratoSocialIDU');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  function cargarCedulasSocial() {
+    let sociales = JSON.parse(localStorage.getItem('sociales') || "[]");
+    let select = document.getElementById('cedulaSocialIDU');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      sociales.map(s => `<option value="${s.noCedula}">${s.noCedula} - ${s.nombre}</option>`).join('');
+  }
+  cargarContratos();
+  cargarCedulasSocial();
+
+  // Validación en tiempo real para celular
+  document.getElementById('celularSocialIDU').addEventListener('input', function() {
+    const celular = this.value.trim();
+    const errorSpan = document.getElementById('errorCelularIDU');
+    if (!/^[0-9]{7,15}$/.test(celular)) {
+      errorSpan.textContent = 'El celular solo debe contener números y mínimo 7 dígitos.';
+      errorSpan.style.display = 'inline';
+    } else {
+      errorSpan.textContent = '';
+      errorSpan.style.display = 'none';
+    }
+  });
+
+  document.getElementById('formSocialIDU').onsubmit = function(e) {
+    e.preventDefault();
+    const celular = document.getElementById('celularSocialIDU').value.trim();
+    const celularValido = /^[0-9]{7,15}$/.test(celular);
+    if (!celularValido) {
+      document.getElementById('msgSocialIDU').innerHTML = `<span style="color:red">El celular solo debe contener números y mínimo 7 dígitos.</span>`;
+      return;
+    }
+    const datos = {
+      noContrato: document.getElementById('contratoSocialIDU').value,
+      cedulaSocialIDU: document.getElementById('cedulaSocialIDU').value,
+      noRadicadoDesignacion: document.getElementById('noRadicadoDesignacion').value,
+      fechaDesignacion: document.getElementById('fechaDesignacion').value,
+      celular: celular,
+      activo: document.getElementById('activoSocialIDU').value
+    };
+    let asociados = JSON.parse(localStorage.getItem('asociarSocialIDU') || "[]");
+    const existe = asociados.some(a => 
+      a.noContrato === datos.noContrato && a.cedulaSocialIDU === datos.cedulaSocialIDU
+    );
+    if (existe) {
+      document.getElementById('msgSocialIDU').innerHTML = `<span style="color:red">Ya existe una asociación para este No. Contrato y Cédula Social IDU.</span>`;
+      return;
+    }
+    asociados.push(datos);
+    localStorage.setItem('asociarSocialIDU', JSON.stringify(asociados));
+    document.getElementById('msgSocialIDU').innerHTML = `
+      <b>Social IDU asociado correctamente:</b>
+      <ul>
+        <li><b>No. Contrato:</b> ${datos.noContrato}</li>
+        <li><b>Cédula Social IDU:</b> ${datos.cedulaSocialIDU}</li>
+        <li><b>No. Radicado Designación:</b> ${datos.noRadicadoDesignacion}</li>
+        <li><b>Fecha Designación:</b> ${datos.fechaDesignacion}</li>
+        <li><b>Celular:</b> ${datos.celular}</li>
+        <li><b>Activo:</b> ${datos.activo}</li>
+      </ul>
+    `;
+    document.getElementById('formSocialIDU').reset();
+    cargarContratos();
+    cargarCedulasSocial();
+  };
+</script>

@@ -1,0 +1,163 @@
+<h3>Informe Específico Contrato</h3>
+<form id="formInformeEspecificoContrato" autocomplete="off">
+  <label>No. Contrato:<br>
+    <select id="noContratoInformeEspecifico" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Lapso de Fechas:<br>
+    Desde <input type="date" id="fechaDesdeInformeEspecifico" required>
+    Hasta <input type="date" id="fechaHastaInformeEspecifico" required>
+  </label><br><br>
+  <label>Formulario Específico:<br>
+    <select id="formularioEspecificoSeleccionado" required>
+      <option value="">Seleccione...</option>
+      <option value="actualizacionesContrato">Actualizaciones Contrato</option>
+      <option value="planesAccion">Planes de Acción</option>
+      <option value="productosEntregables">Productos Entregables</option>
+      <option value="informesMensuales">Informes Mensuales</option>
+    </select>
+  </label><br><br>
+  <label>Formato de visualización/descarga:<br>
+    <select id="formatoDescargaInformeEspecifico" required>
+      <option value="ver">Ver directamente</option>
+      <option value="excel">Excel (.xlsx)</option>
+      <option value="pdf">PDF</option>
+    </select>
+  </label><br><br>
+  <button type="button" onclick="generarInformeEspecifico()">Generar Informe Específico</button>
+</form>
+<div id="msgInformeEspecificoContrato"></div>
+<div id="vistaInformeEspecifico"></div>
+
+<!-- SheetJS para Excel y jsPDF para PDF -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  // Cargar contratos en el select
+  function cargarContratosInformeEspecifico() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoInformeEspecifico');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  cargarContratosInformeEspecifico();
+
+  // Obtener las claves y campos de cada formulario
+  const formulariosCampos = {
+    actualizacionesContrato: {
+      nombre: 'Actualizaciones Contrato',
+      campos: ['Fecha Actualización', 'Observación'],
+      filtroFecha: 'fecha',
+      datos: () => JSON.parse(localStorage.getItem('actualizacionesContrato') || "[]"),
+      fila: a => [a.fecha, a.observacion]
+    },
+    planesAccion: {
+      nombre: 'Planes de Acción',
+      campos: ['Memorando Entrada', 'No. Plan de Acción', 'Fecha Plan de Acción'],
+      filtroFecha: 'fechaPlanAccion',
+      datos: () => JSON.parse(localStorage.getItem('planesAccion') || "[]"),
+      fila: p => [p.memorandoEntrada, p.noPlanAccion, p.fechaPlanAccion]
+    },
+    productosEntregables: {
+      nombre: 'Productos Entregables',
+      campos: ['Producto Entregable', 'No. Memorando Entrada', 'Fecha'],
+      filtroFecha: 'fecha',
+      datos: () => JSON.parse(localStorage.getItem('productosEntregables') || "[]"),
+      fila: p => [p.productoEntregable, p.noMemorandoEntrada, p.fecha]
+    },
+    informesMensuales: {
+      nombre: 'Informes Mensuales',
+      campos: ['No. Informe Mensual','Versión','Fecha Entrada','No. Memorando Entrada','Fecha Aprobación'],
+      filtroFecha: 'fechaEntrada',
+      datos: () => JSON.parse(localStorage.getItem('informesMensuales') || "[]"),
+      fila: i => [i.noInformeMensual, i.version, i.fechaEntrada, i.noMemorandoEntrada, i.fechaAprobacion]
+    }
+  };
+
+  function generarInformeEspecifico() {
+    const noContrato = document.getElementById('noContratoInformeEspecifico').value;
+    const fechaDesde = document.getElementById('fechaDesdeInformeEspecifico').value;
+    const fechaHasta = document.getElementById('fechaHastaInformeEspecifico').value;
+    const formulario = document.getElementById('formularioEspecificoSeleccionado').value;
+    const formato = document.getElementById('formatoDescargaInformeEspecifico').value;
+    document.getElementById('msgInformeEspecificoContrato').innerHTML = '';
+    document.getElementById('vistaInformeEspecifico').innerHTML = '';
+
+    if (!noContrato || !fechaDesde || !fechaHasta || !formulario || !formato) {
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = "<span style='color:red'>Complete todos los campos.</span>";
+      return;
+    }
+
+    // Obtener los datos y campos
+    const config = formulariosCampos[formulario];
+    if (!config) {
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = "<span style='color:red'>Formulario no válido.</span>";
+      return;
+    }
+    // Filtrar registros por contrato y fechas
+    let registros = config.datos().filter(r => 
+      r.noContrato === noContrato &&
+      r[config.filtroFecha] >= fechaDesde &&
+      r[config.filtroFecha] <= fechaHasta
+    );
+
+    if (registros.length === 0) {
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = "<span style='color:orange'>No hay registros para ese filtro.</span>";
+      return;
+    }
+
+    // Formato: Ver directamente
+    if (formato === 'ver') {
+      let html = `<h4>${config.nombre}</h4>`;
+      html += `<table border="1" cellpadding="4" style="width:100%;font-size:13px;"><thead><tr>`;
+      config.campos.forEach(c => html += `<th>${c}</th>`);
+      html += `</tr></thead><tbody>`;
+      registros.forEach(r => {
+        html += `<tr>${config.fila(r).map(v => `<td>${v}</td>`).join('')}</tr>`;
+      });
+      html += `</tbody></table>`;
+      document.getElementById('vistaInformeEspecifico').innerHTML = html;
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = `<span style="color:green">Vista generada.</span>`;
+    }
+    // Formato: Excel
+    else if (formato === 'excel') {
+      let datosExcel = [config.campos].concat(registros.map(r => config.fila(r)));
+      let ws = XLSX.utils.aoa_to_sheet(datosExcel);
+      let wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, config.nombre);
+      XLSX.writeFile(wb, `InformeEspecifico_${config.nombre}_${noContrato}.xlsx`);
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = `<span style="color:green">Informe Excel descargado.</span>`;
+    }
+    // Formato: PDF
+    else if (formato === 'pdf') {
+      const { jsPDF } = window.jspdf;
+      let doc = new jsPDF({ orientation: "portrait" });
+      let y = 12;
+      doc.setFontSize(14);
+      doc.text(`Informe Específico Contrato: ${noContrato}`, 10, y);
+      y += 8;
+      doc.setFontSize(12);
+      doc.text(config.nombre, 10, y);
+      y += 6;
+      doc.setFontSize(10);
+      // Encabezados
+      let header = config.campos.join(" | ");
+      doc.text(header, 10, y);
+      y += 6;
+      // Filas
+      registros.forEach(r => {
+        let rowText = config.fila(r).join(" | ");
+        if (y > 280) {
+          doc.addPage();
+          y = 10;
+        }
+        doc.text(rowText, 10, y);
+        y += 5;
+      });
+      doc.save(`InformeEspecifico_${config.nombre}_${noContrato}.pdf`);
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = `<span style="color:green">Informe PDF descargado.</span>`;
+    }
+  }
+</script>

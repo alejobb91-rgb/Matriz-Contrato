@@ -1,0 +1,64 @@
+<h2>Gestión de Usuarios (Solo Administrador Principal)</h2>
+<div id="usuariosModulo" style="display:none;">
+  <div style="margin-bottom:16px;">
+    <input type="text" id="busquedaUsuario" placeholder="Buscar por nombre o email..." style="width:220px;">
+  </div>
+  <form id="formUsuario" autocomplete="off">
+    <h3 id="tituloFormUsuario">Registrar Nuevo Usuario</h3>
+    <input type="hidden" id="idxUsuarioEditar" value="">
+    <label>Nombre de Usuario:<br>
+      <input type="text" id="nombreUsuario" required>
+    </label><br><br>
+    <label>Email (@idu.gov.co):<br>
+      <input type="email" id="emailUsuario" pattern="^[a-zA-Z0-9._%+-]+@idu\.gov\.co$" required placeholder="usuario@idu.gov.co">
+      <span id="validacionEmail" style="color:red;font-size:12px;"></span>
+    </label><br><br>
+    <label>Rol:<br>
+      <select id="rolUsuario" required>
+        <option value="">Seleccione...</option>
+        <option value="Administrador Principal">Administrador Principal</option>
+        <option value="Coordinador">Coordinador</option>
+        <option value="Social">Social</option>
+        <option value="Solo Vista">Solo Vista</option>
+      </select>
+    </label><br><br>
+    <label>Contraseña:<br>
+      <input type="password" id="passUsuario" required>
+      <span id="validacionPass" style="color:red;font-size:12px;"></span>
+    </label><br><br>
+    <button type="submit" id="btnSubmitUsuario">Registrar Usuario</button>
+    <button type="button" id="btnCancelarEdicion" style="display:none;" onclick="cancelarEdicionUsuario()">Cancelar</button>
+  </form>
+  <div id="msgUsuario"></div>
+  <hr>
+  <h3>Usuarios Registrados</h3>
+  <table id="tablaUsuarios" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<h2>Login Usuarios IDU</h2>
+<form id="formLogin" autocomplete="off">
+  <label>Email (@idu.gov.co):<br>
+    <input type="email" id="loginEmail" pattern="^[a-zA-Z0-9._%+-]+@idu\.gov\.co$" required placeholder="usuario@idu.gov.co">
+    <span id="validacionLoginEmail" style="color:red;font-size:12px;"></span>
+  </label><br><br>
+  <label>Contraseña:<br>
+    <input type="password" id="loginPass" required>
+    <span id="validacionLoginPass" style="color:red;font-size:12px;"></span>
+  </label><br><br>
+  <button type="submit">Ingresar</button>
+</form>
+<div id="msgLogin"></div>
+
+<script>
+// ... (todo el script de gestión y login de usuarios con roles y SHA-256, como en mensajes anteriores)
+</script>

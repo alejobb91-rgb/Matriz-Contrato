@@ -1,0 +1,70 @@
+<form id="formActualizacionesContrato" autocomplete="off">
+  <h3>Actualizaciones Contrato</h3>
+  <label>No. Contrato:<br>
+    <select id="noContratoActualizacion" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Fecha Actualización:<br>
+    <input type="date" id="fechaActualizacionContrato" required>
+  </label><br><br>
+  <label>Observación:<br>
+    <textarea id="observacionActualizacionContrato" required rows="3"></textarea>
+  </label><br><br>
+  <button type="submit">Guardar Actualización</button>
+</form>
+<div id="msgActualizacionesContrato"></div>
+<hr>
+<h3>Actualizaciones guardadas</h3>
+<table id="tablaActualizaciones" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+  <thead>
+    <tr>
+      <th>No. Contrato</th>
+      <th>Fecha Actualización</th>
+      <th>Observación</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  // Cargar contratos en el select
+  function cargarContratosActualizacion() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoActualizacion');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  cargarContratosActualizacion();
+
+  // Mostrar tabla de actualizaciones
+  function mostrarTablaActualizaciones() {
+    let actualizaciones = JSON.parse(localStorage.getItem('actualizacionesContrato') || "[]");
+    const tbody = document.querySelector('#tablaActualizaciones tbody');
+    tbody.innerHTML = actualizaciones.map(a => `
+      <tr>
+        <td>${a.noContrato}</td>
+        <td>${a.fecha}</td>
+        <td>${a.observacion}</td>
+      </tr>
+    `).join('');
+  }
+  mostrarTablaActualizaciones();
+
+  // Guardar actualización en localStorage
+  document.getElementById('formActualizacionesContrato').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      noContrato: document.getElementById('noContratoActualizacion').value,
+      fecha: document.getElementById('fechaActualizacionContrato').value,
+      observacion: document.getElementById('observacionActualizacionContrato').value.trim()
+    };
+    let actualizaciones = JSON.parse(localStorage.getItem('actualizacionesContrato') || "[]");
+    actualizaciones.push(datos);
+    localStorage.setItem('actualizacionesContrato', JSON.stringify(actualizaciones));
+    document.getElementById('msgActualizacionesContrato').innerHTML = `<b>Actualización registrada correctamente.</b>`;
+    document.getElementById('formActualizacionesContrato').reset();
+    cargarContratosActualizacion();
+    mostrarTablaActualizaciones();
+  };
+</script>

@@ -1,0 +1,161 @@
+<h2>Módulo Descargar Reportes</h2>
+
+<!-- Formulario: Informe General Contrato -->
+<form id="formInformeGeneralContrato" autocomplete="off">
+  <h3>Informe General Contrato</h3>
+  <label>Seleccione No. Contrato:<br>
+    <select id="noContratoGeneral" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <button type="button" onclick="descargarInformeGeneral()">Descargar Informe General</button>
+</form>
+<div id="msgInformeGeneralContrato"></div>
+<hr>
+
+<!-- Formulario: Informe Específico Contrato -->
+<form id="formInformeEspecificoContrato" autocomplete="off">
+  <h3>Informe Específico Contrato</h3>
+  <label>Seleccione No. Contrato:<br>
+    <select id="noContratoEspecifico" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Tipo de Informe:<br>
+    <select id="tipoInformeEspecifico" required>
+      <option value="">Seleccione...</option>
+      <option value="Actualizaciones">Actualizaciones</option>
+      <option value="Planes de Acción">Planes de Acción</option>
+      <option value="Productos Entregables">Productos Entregables</option>
+      <option value="Informes Mensuales">Informes Mensuales</option>
+    </select>
+  </label><br><br>
+  <button type="button" onclick="descargarInformeEspecifico()">Descargar Informe Específico</button>
+</form>
+<div id="msgInformeEspecificoContrato"></div>
+
+<script>
+  // Cargar contratos en los selects
+  function cargarContratosReporte() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let selectGeneral = document.getElementById('noContratoGeneral');
+    let selectEspecifico = document.getElementById('noContratoEspecifico');
+    const opciones = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+    selectGeneral.innerHTML = opciones;
+    selectEspecifico.innerHTML = opciones;
+  }
+  cargarContratosReporte();
+
+  // Función para descargar informe general (simulado como CSV)
+  function descargarInformeGeneral() {
+    const noContrato = document.getElementById('noContratoGeneral').value;
+    if (!noContrato) {
+      document.getElementById('msgInformeGeneralContrato').innerHTML = "<span style='color:red'>Seleccione un contrato.</span>";
+      return;
+    }
+    // Recopilar datos relacionados al contrato
+    let infoContratos = JSON.parse(localStorage.getItem('infoContratos') || "[]");
+    let actualizaciones = JSON.parse(localStorage.getItem('actualizacionesContrato') || "[]");
+    let planes = JSON.parse(localStorage.getItem('planesAccion') || "[]");
+    let productos = JSON.parse(localStorage.getItem('productosEntregables') || "[]");
+    let informesMensuales = JSON.parse(localStorage.getItem('informesMensuales') || "[]");
+
+    let datos = [];
+    // Buscar información general del contrato
+    let info = infoContratos.find(c => c.noContrato === noContrato);
+    if (info) {
+      datos.push(['No. Contrato', 'Localidad', 'Barrios', 'UPZ', 'Población Beneficiada', 'Fecha Inicio', 'Fecha Final', 'Dirección Punto IDU', 'Teléfono', 'Correo', 'Estado', 'Etapa']);
+      datos.push([info.noContrato, (info.localidad||[]).join('|'), (info.barrios||[]).join('|'), (info.upz||[]).join('|'), info.poblacionBeneficiada, info.fechaInicio, info.fechaFinal, info.direccionPuntoIDU, info.telefonoPuntoIDU, info.correoPuntoIDU, info.estado, info.etapa]);
+    }
+    // Actualizaciones
+    let actualizacionesContrato = actualizaciones.filter(a => a.noContrato === noContrato);
+    if (actualizacionesContrato.length > 0) {
+      datos.push([]);
+      datos.push(['Actualizaciones - Fecha', 'Observación']);
+      actualizacionesContrato.forEach(a => datos.push([a.fecha, a.observacion]));
+    }
+    // Planes de Acción
+    let planesContrato = planes.filter(p => p.noContrato === noContrato);
+    if (planesContrato.length > 0) {
+      datos.push([]);
+      datos.push(['Planes de Acción - Memorando Entrada', 'No. Plan de Acción', 'Fecha Plan de Acción']);
+      planesContrato.forEach(p => datos.push([p.memorandoEntrada, p.noPlanAccion, p.fechaPlanAccion]));
+    }
+    // Productos Entregables
+    let productosContrato = productos.filter(p => p.noContrato === noContrato);
+    if (productosContrato.length > 0) {
+      datos.push([]);
+      datos.push(['Productos Entregables - Producto', 'No. Memorando Entrada', 'Fecha']);
+      productosContrato.forEach(p => datos.push([p.productoEntregable, p.noMemorandoEntrada, p.fecha]));
+    }
+    // Informes Mensuales
+    let informesContrato = informesMensuales.filter(i => i.noContrato === noContrato);
+    if (informesContrato.length > 0) {
+      datos.push([]);
+      datos.push(['Informes Mensuales - No.', 'Versión', 'Fecha Entrada', 'No. Memorando Entrada', 'Fecha Aprobación']);
+      informesContrato.forEach(i => datos.push([i.noInformeMensual, i.version, i.fechaEntrada, i.noMemorandoEntrada, i.fechaAprobacion]));
+    }
+
+    // Descargar como CSV
+    let csv = datos.map(row => row.join(";")).join("\n");
+    let blob = new Blob([csv], {type: 'text/csv'});
+    let link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `InformeGeneralContrato_${noContrato}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    document.getElementById('msgInformeGeneralContrato').innerHTML = `<span style="color:green">Informe General descargado.</span>`;
+  }
+
+  // Función para descargar informe específico (simulado como CSV)
+  function descargarInformeEspecifico() {
+    const noContrato = document.getElementById('noContratoEspecifico').value;
+    const tipo = document.getElementById('tipoInformeEspecifico').value;
+    if (!noContrato || !tipo) {
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = "<span style='color:red'>Seleccione contrato y tipo de informe.</span>";
+      return;
+    }
+    let datos = [];
+    let nombreArchivo = "";
+    if (tipo === "Actualizaciones") {
+      let actualizaciones = JSON.parse(localStorage.getItem('actualizacionesContrato') || "[]");
+      let registros = actualizaciones.filter(a => a.noContrato === noContrato);
+      datos.push(['No. Contrato','Fecha','Observación']);
+      registros.forEach(a => datos.push([a.noContrato, a.fecha, a.observacion]));
+      nombreArchivo = `ActualizacionesContrato_${noContrato}.csv`;
+    } else if (tipo === "Planes de Acción") {
+      let planes = JSON.parse(localStorage.getItem('planesAccion') || "[]");
+      let registros = planes.filter(p => p.noContrato === noContrato);
+      datos.push(['No. Contrato','Memorando Entrada','No. Plan de Acción','Fecha Plan de Acción']);
+      registros.forEach(p => datos.push([p.noContrato, p.memorandoEntrada, p.noPlanAccion, p.fechaPlanAccion]));
+      nombreArchivo = `PlanesAccionContrato_${noContrato}.csv`;
+    } else if (tipo === "Productos Entregables") {
+      let productos = JSON.parse(localStorage.getItem('productosEntregables') || "[]");
+      let registros = productos.filter(p => p.noContrato === noContrato);
+      datos.push(['No. Contrato','Producto','No. Memorando Entrada','Fecha']);
+      registros.forEach(p => datos.push([p.noContrato, p.productoEntregable, p.noMemorandoEntrada, p.fecha]));
+      nombreArchivo = `ProductosEntregablesContrato_${noContrato}.csv`;
+    } else if (tipo === "Informes Mensuales") {
+      let informes = JSON.parse(localStorage.getItem('informesMensuales') || "[]");
+      let registros = informes.filter(i => i.noContrato === noContrato);
+      datos.push(['No. Contrato','No. Informe Mensual','Versión','Fecha Entrada','No. Memorando Entrada','Fecha Aprobación']);
+      registros.forEach(i => datos.push([i.noContrato, i.noInformeMensual, i.version, i.fechaEntrada, i.noMemorandoEntrada, i.fechaAprobacion]));
+      nombreArchivo = `InformesMensualesContrato_${noContrato}.csv`;
+    }
+    if (datos.length > 1) {
+      let csv = datos.map(row => row.join(";")).join("\n");
+      let blob = new Blob([csv], {type: 'text/csv'});
+      let link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = nombreArchivo;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = `<span style="color:green">Informe Específico descargado.</span>`;
+    } else {
+      document.getElementById('msgInformeEspecificoContrato').innerHTML = "<span style='color:orange'>No hay registros para ese tipo de informe y contrato.</span>";
+    }
+  }
+</script>

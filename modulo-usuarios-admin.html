@@ -1,0 +1,101 @@
+<h2>Gestión de Usuarios (Solo Administrador)</h2>
+<div id="usuariosModulo" style="display:none;">
+  <form id="formUsuario" autocomplete="off">
+    <h3>Registrar Nuevo Usuario</h3>
+    <label>Nombre de Usuario:<br>
+      <input type="text" id="nombreUsuario" required>
+    </label><br><br>
+    <label>Email:<br>
+      <input type="email" id="emailUsuario" required>
+    </label><br><br>
+    <label>Rol:<br>
+      <select id="rolUsuario" required>
+        <option value="">Seleccione...</option>
+        <option value="admin">Administrador</option>
+        <option value="usuario">Usuario</option>
+      </select>
+    </label><br><br>
+    <label>Contraseña:<br>
+      <input type="password" id="passUsuario" required>
+    </label><br><br>
+    <button type="submit">Registrar Usuario</button>
+  </form>
+  <div id="msgUsuario"></div>
+  <hr>
+  <h3>Usuarios Registrados</h3>
+  <table id="tablaUsuarios" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  // Simulación de verificación de usuario administrador (debería integrarse con login real)
+  function esAdministrador() {
+    // Cambia este valor según tu sistema de autenticación real
+    // Ejemplo: return sessionStorage.getItem('rol') === 'admin';
+    return true; // Simula que es admin
+  }
+
+  function mostrarModuloUsuarios() {
+    if (esAdministrador()) {
+      document.getElementById('usuariosModulo').style.display = '';
+    }
+  }
+  mostrarModuloUsuarios();
+
+  // Mostrar tabla de usuarios
+  function mostrarTablaUsuarios() {
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    const tbody = document.querySelector('#tablaUsuarios tbody');
+    tbody.innerHTML = usuarios.map((u, idx) => `
+      <tr>
+        <td>${u.nombre}</td>
+        <td>${u.email}</td>
+        <td>${u.rol}</td>
+        <td>
+          <button onclick="eliminarUsuario(${idx})">Eliminar</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  mostrarTablaUsuarios();
+
+  // Guardar usuario en localStorage
+  document.getElementById('formUsuario').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      nombre: document.getElementById('nombreUsuario').value.trim(),
+      email: document.getElementById('emailUsuario').value.trim(),
+      rol: document.getElementById('rolUsuario').value,
+      pass: document.getElementById('passUsuario').value // No cifrado, solo demo
+    };
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    if (usuarios.some(u => u.email === datos.email)) {
+      document.getElementById('msgUsuario').innerHTML = `<span style="color:red">El email ya está registrado.</span>`;
+      return;
+    }
+    usuarios.push(datos);
+    localStorage.setItem('usuariosApp', JSON.stringify(usuarios));
+    document.getElementById('msgUsuario').innerHTML = `<span style="color:green">Usuario registrado correctamente.</span>`;
+    document.getElementById('formUsuario').reset();
+    mostrarTablaUsuarios();
+  };
+
+  // Eliminar usuario
+  function eliminarUsuario(idx) {
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    if (confirm('¿Seguro que desea eliminar este usuario?')) {
+      usuarios.splice(idx, 1);
+      localStorage.setItem('usuariosApp', JSON.stringify(usuarios));
+      mostrarTablaUsuarios();
+    }
+  }
+</script>

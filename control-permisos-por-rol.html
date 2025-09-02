@@ -1,0 +1,47 @@
+<h3>Panel de acciones</h3>
+<button id="btnCrear" class="soloVistaBloquea">Crear registro</button>
+<button id="btnEditar" class="soloVistaBloquea">Editar registro</button>
+<button id="btnEliminarUsuario">Eliminar usuario</button>
+
+<div id="usuariosModulo" style="display:none;">
+  <h4>Gestión de usuarios</h4>
+  <!-- ... -->
+</div>
+<div id="moduloSocial" style="display:none;">
+  <h4>Módulo Social</h4>
+  <!-- ... -->
+</div>
+
+<script>
+  function getRolActual() {
+    const usuario = JSON.parse(localStorage.getItem('usuarioActual') || '{}');
+    return usuario.rol || "";
+  }
+
+  function mostrarOpcionesPorRol() {
+    const rol = getRolActual();
+
+    // Botón eliminar usuario solo para Admin Principal
+    document.getElementById('btnEliminarUsuario').style.display = 
+      (rol === "Administrador Principal") ? "" : "none";
+
+    // Módulo usuarios solo para Admin Principal
+    document.getElementById('usuariosModulo').style.display = 
+      (rol === "Administrador Principal") ? "" : "none";
+
+    // Módulo social para Social y Admin Principal
+    document.getElementById('moduloSocial').style.display =
+      (rol === "Social" || rol === "Administrador Principal") ? "" : "none";
+
+    // Deshabilita edición para Solo Vista
+    const camposEditables = document.querySelectorAll('.soloVistaBloquea');
+    camposEditables.forEach(campo => {
+      campo.disabled = (rol === "Solo Vista");
+    });
+
+    // Puedes agregar más controles para el resto de roles y módulos
+  }
+
+  // Ejecutar al cargar
+  document.addEventListener('DOMContentLoaded', mostrarOpcionesPorRol);
+</script>

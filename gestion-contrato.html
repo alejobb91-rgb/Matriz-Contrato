@@ -1,0 +1,108 @@
+<h2>Módulo Gestión Contrato</h2>
+
+<!-- Información del Contrato -->
+<form id="formInformacionContrato" autocomplete="off">
+  <h3>Información del Contrato</h3>
+  <label>No. Contrato:<br>
+    <input type="text" id="noContrato" required>
+  </label><br><br>
+  <label>Objeto del Contrato:<br>
+    <textarea id="objetoContrato" required></textarea>
+  </label><br><br>
+  <label>Valor:<br>
+    <input type="number" id="valorContrato" min="0" required>
+  </label><br><br>
+  <label>Fecha Inicio:<br>
+    <input type="date" id="fechaInicioContrato" required>
+  </label><br><br>
+  <label>Fecha Fin:<br>
+    <input type="date" id="fechaFinContrato" required>
+  </label><br><br>
+  <button type="submit">Guardar Información Contrato</button>
+</form>
+<div id="msgInformacionContrato"></div>
+<br><hr><br>
+
+<!-- Actualizaciones Contrato -->
+<form id="formActualizacionesContrato" autocomplete="off">
+  <h3>Actualizaciones Contrato</h3>
+  <label>No. Contrato:<br>
+    <select id="noContratoActualizacion" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Fecha Actualización:<br>
+    <input type="date" id="fechaActualizacionContrato" required>
+  </label><br><br>
+  <label>Descripción Actualización:<br>
+    <textarea id="descripcionActualizacionContrato" required></textarea>
+  </label><br><br>
+  <button type="submit">Guardar Actualización</button>
+</form>
+<div id="msgActualizacionesContrato"></div>
+
+<script>
+  // Guardar contrato en localStorage
+  document.getElementById('formInformacionContrato').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      noContrato: document.getElementById('noContrato').value.trim(),
+      objeto: document.getElementById('objetoContrato').value.trim(),
+      valor: document.getElementById('valorContrato').value,
+      fechaInicio: document.getElementById('fechaInicioContrato').value,
+      fechaFin: document.getElementById('fechaFinContrato').value
+    };
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    // Validación: no repetir No. Contrato
+    const existe = contratos.some(c => c.noContrato === datos.noContrato);
+    if (existe) {
+      document.getElementById('msgInformacionContrato').innerHTML = `<span style="color:red">Ya existe un contrato con ese número.</span>`;
+      return;
+    }
+    contratos.push(datos);
+    localStorage.setItem('contratos', JSON.stringify(contratos));
+    document.getElementById('msgInformacionContrato').innerHTML = `
+      <b>Contrato guardado correctamente:</b>
+      <ul>
+        <li><b>No. Contrato:</b> ${datos.noContrato}</li>
+        <li><b>Objeto:</b> ${datos.objeto}</li>
+        <li><b>Valor:</b> ${datos.valor}</li>
+        <li><b>Fecha Inicio:</b> ${datos.fechaInicio}</li>
+        <li><b>Fecha Fin:</b> ${datos.fechaFin}</li>
+      </ul>
+    `;
+    document.getElementById('formInformacionContrato').reset();
+    cargarContratosActualizacion();
+  };
+
+  // Cargar contratos en el select de Actualizaciones
+  function cargarContratosActualizacion() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoActualizacion');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  cargarContratosActualizacion();
+
+  // Guardar actualización en localStorage
+  document.getElementById('formActualizacionesContrato').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      noContrato: document.getElementById('noContratoActualizacion').value,
+      fecha: document.getElementById('fechaActualizacionContrato').value,
+      descripcion: document.getElementById('descripcionActualizacionContrato').value.trim()
+    };
+    let actualizaciones = JSON.parse(localStorage.getItem('actualizacionesContrato') || "[]");
+    actualizaciones.push(datos);
+    localStorage.setItem('actualizacionesContrato', JSON.stringify(actualizaciones));
+    document.getElementById('msgActualizacionesContrato').innerHTML = `
+      <b>Actualización registrada correctamente:</b>
+      <ul>
+        <li><b>No. Contrato:</b> ${datos.noContrato}</li>
+        <li><b>Fecha Actualización:</b> ${datos.fecha}</li>
+        <li><b>Descripción:</b> ${datos.descripcion}</li>
+      </ul>
+    `;
+    document.getElementById('formActualizacionesContrato').reset();
+  };
+</script>

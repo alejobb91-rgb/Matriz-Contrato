@@ -1,0 +1,134 @@
+<h3>Informe General Contrato</h3>
+<form id="formInformeGeneralContrato" autocomplete="off">
+  <label>No. Contrato:<br>
+    <select id="noContratoInformeGeneral" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Formato de descarga:<br>
+    <select id="formatoDescargaInformeGeneral" required>
+      <option value="excel">Excel (.xlsx)</option>
+      <option value="pdf">PDF</option>
+    </select>
+  </label><br><br>
+  <button type="button" onclick="descargarInformeGeneral()">Descargar Informe General</button>
+</form>
+<div id="msgInformeGeneralContrato"></div>
+
+<!-- SheetJS para Excel y jsPDF para PDF -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  // Cargar contratos en el select
+  function cargarContratosInformeGeneral() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoInformeGeneral');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  cargarContratosInformeGeneral();
+
+  // Función de descarga
+  function descargarInformeGeneral() {
+    const noContrato = document.getElementById('noContratoInformeGeneral').value;
+    const formato = document.getElementById('formatoDescargaInformeGeneral').value;
+    if (!noContrato) {
+      document.getElementById('msgInformeGeneralContrato').innerHTML = "<span style='color:red'>Seleccione un contrato.</span>";
+      return;
+    }
+    // Recopilar datos relacionados al contrato
+    let infoContratos = JSON.parse(localStorage.getItem('infoContratos') || "[]");
+    let actualizaciones = JSON.parse(localStorage.getItem('actualizacionesContrato') || "[]");
+    let planes = JSON.parse(localStorage.getItem('planesAccion') || "[]");
+    let productos = JSON.parse(localStorage.getItem('productosEntregables') || "[]");
+    let informesMensuales = JSON.parse(localStorage.getItem('informesMensuales') || "[]");
+
+    let info = infoContratos.find(c => c.noContrato === noContrato);
+    let actualizacionesContrato = actualizaciones.filter(a => a.noContrato === noContrato);
+    let planesContrato = planes.filter(p => p.noContrato === noContrato);
+    let productosContrato = productos.filter(p => p.noContrato === noContrato);
+    let informesContrato = informesMensuales.filter(i => i.noContrato === noContrato);
+
+    // Generar datos tabulares para Excel
+    let sheets = {};
+
+    // Información General
+    sheets['Informacion General'] = [
+      ["No. Contrato", info?.noContrato || ""],
+      ["Localidad", (info?.localidad||[]).join(', ')],
+      ["Barrios", (info?.barrios||[]).join(', ')],
+      ["UPZ", (info?.upz||[]).join(', ')],
+      ["Población Beneficiada", info?.poblacionBeneficiada || ""],
+      ["Fecha Inicio", info?.fechaInicio || ""],
+      ["Fecha Final", info?.fechaFinal || ""],
+      ["Dirección Punto IDU", info?.direccionPuntoIDU || ""],
+      ["Teléfono Punto IDU", info?.telefonoPuntoIDU || ""],
+      ["Correo Punto IDU", info?.correoPuntoIDU || ""],
+      ["Estado", info?.estado || ""],
+      ["Etapa", info?.etapa || ""]
+    ];
+
+    // Actualizaciones
+    sheets['Actualizaciones'] = actualizacionesContrato.length
+      ? [["Fecha Actualización", "Observación"]].concat(actualizacionesContrato.map(a => [a.fecha, a.observacion]))
+      : [["Sin registros"]];
+
+    // Planes de Acción
+    sheets['Planes de Acción'] = planesContrato.length
+      ? [["Memorando Entrada", "No. Plan de Acción", "Fecha Plan de Acción"]].concat(
+          planesContrato.map(p => [p.memorandoEntrada, p.noPlanAccion, p.fechaPlanAccion]))
+      : [["Sin registros"]];
+
+    // Productos Entregables
+    sheets['Productos Entregables'] = productosContrato.length
+      ? [["Producto Entregable", "No. Memorando Entrada", "Fecha"]].concat(
+          productosContrato.map(p => [p.productoEntregable, p.noMemorandoEntrada, p.fecha]))
+      : [["Sin registros"]];
+
+    // Informes Mensuales
+    sheets['Informes Mensuales'] = informesContrato.length
+      ? [["No. Informe Mensual","Versión","Fecha Entrada","No. Memorando Entrada","Fecha Aprobación"]].concat(
+          informesContrato.map(i => [i.noInformeMensual, i.version, i.fechaEntrada, i.noMemorandoEntrada, i.fechaAprobacion]))
+      : [["Sin registros"]];
+
+    if (formato === 'excel') {
+      // Excel con SheetJS
+      let wb = XLSX.utils.book_new();
+      for (const sheetName in sheets) {
+        let ws = XLSX.utils.aoa_to_sheet(sheets[sheetName]);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      }
+      XLSX.writeFile(wb, `InformeGeneral_${noContrato}.xlsx`);
+      document.getElementById('msgInformeGeneralContrato').innerHTML = `<span style="color:green">Informe General Excel descargado.</span>`;
+    } else if (formato === 'pdf') {
+      // PDF con jsPDF
+      const { jsPDF } = window.jspdf;
+      let doc = new jsPDF({ orientation: "portrait" });
+      let y = 10;
+      doc.setFontSize(14);
+      doc.text(`Informe General Contrato: ${noContrato}`, 10, y);
+      y += 8;
+
+      for (const titulo in sheets) {
+        doc.setFontSize(12);
+        doc.text(titulo, 10, y);
+        y += 6;
+        doc.setFontSize(10);
+        sheets[titulo].forEach(row => {
+          let rowText = row.join(" | ");
+          // Si se pasa de la página
+          if (y > 280) {
+            doc.addPage();
+            y = 10;
+          }
+          doc.text(rowText, 10, y);
+          y += 5;
+        });
+        y += 6;
+      }
+      doc.save(`InformeGeneral_${noContrato}.pdf`);
+      document.getElementById('msgInformeGeneralContrato').innerHTML = `<span style="color:green">Informe General PDF descargado.</span>`;
+    }
+  }
+</script>

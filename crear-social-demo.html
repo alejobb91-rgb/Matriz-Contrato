@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Social</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h2 { color: #3a3a3a; }
+    label { display: block; margin-bottom: 8px; }
+    input, textarea { padding: 6px; width: 250px; }
+    button { padding: 8px 16px; margin-top: 12px; }
+    #crearSocialMsg { margin-top: 18px; background: #f6f6f6; border-left: 4px solid #2196f3; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Crear Social</h2>
+  <form id="formCrearSocial" autocomplete="off">
+    <label>No. Cédula:<br>
+      <input type="text" id="noCedula" required>
+    </label><br>
+
+    <label>Nombre:<br>
+      <input type="text" id="nombreSocial" required>
+    </label><br>
+
+    <label>Celular:<br>
+      <input type="text" id="celularSocial" required>
+    </label><br>
+
+    <label>Correo Electrónico:<br>
+      <input type="email" id="correoSocial" required>
+    </label><br>
+
+    <button type="submit">Guardar Social</button>
+  </form>
+  <div id="crearSocialMsg"></div>
+
+  <script>
+    document.getElementById('formCrearSocial').onsubmit = function(e) {
+      e.preventDefault();
+      const social = {
+        noCedula: document.getElementById('noCedula').value.trim(),
+        nombre: document.getElementById('nombreSocial').value.trim(),
+        celular: document.getElementById('celularSocial').value.trim(),
+        correo: document.getElementById('correoSocial').value.trim()
+      };
+      document.getElementById('crearSocialMsg').innerHTML = `
+        <h3>Datos ingresados:</h3>
+        <ul>
+          <li><b>No. Cédula:</b> ${social.noCedula}</li>
+          <li><b>Nombre:</b> ${social.nombre}</li>
+          <li><b>Celular:</b> ${social.celular}</li>
+          <li><b>Correo Electrónico:</b> ${social.correo}</li>
+        </ul>
+      `;
+      document.getElementById('formCrearSocial').reset();
+    };
+  </script>
+</body>
+</html>

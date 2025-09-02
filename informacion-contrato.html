@@ -1,0 +1,247 @@
+<!-- Choices.js CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+<form id="formInformacionContrato" autocomplete="off">
+  <h3>Información del Contrato</h3>
+  <label>No. Contrato:<br>
+    <select id="noContrato" required></select>
+  </label><br><br>
+  
+  <label>Localidad:<br>
+    <select id="localidad" multiple required></select>
+  </label><br><br>
+  
+  <label>Barrios:<br>
+    <select id="barrios" multiple required></select>
+  </label><br><br>
+  
+  <label>UPZ:<br>
+    <select id="upz" multiple required></select>
+  </label><br><br>
+  
+  <label>Población Beneficiada:<br>
+    <input type="number" id="poblacionBeneficiada" min="0" required>
+  </label><br><br>
+  
+  <label>Fecha de Inicio:<br>
+    <input type="date" id="fechaInicio" required>
+  </label><br><br>
+  
+  <label>Fecha Final:<br>
+    <input type="date" id="fechaFinal" required>
+  </label><br><br>
+  
+  <label>Dirección Punto IDU:<br>
+    <input type="text" id="direccionPuntoIDU" required>
+  </label><br><br>
+  
+  <label>Teléfono Punto IDU:<br>
+    <input type="text" id="telefonoPuntoIDU" required pattern="^[0-9]{7,15}$" maxlength="15" title="Solo números, mínimo 7 dígitos">
+    <span id="errorTelefonoIDU" style="color:red;display:none;"></span>
+  </label><br><br>
+  
+  <label>Correo Electrónico Punto IDU:<br>
+    <input type="email" id="correoPuntoIDU" required>
+    <span id="errorCorreoIDU" style="color:red;display:none;"></span>
+  </label><br><br>
+  
+  <label>Estado:<br>
+    <select id="estado" required>
+      <option value="">Seleccione...</option>
+      <option value="Activo">Activo</option>
+      <option value="Suspendido">Suspendido</option>
+    </select>
+  </label><br><br>
+  
+  <label>Etapa:<br>
+    <select id="etapa" required>
+      <option value="">Seleccione...</option>
+      <option value="Constucción">Constucción</option>
+      <option value="Conservación">Conservación</option>
+      <option value="Estudios y Diseños">Estudios y Diseños</option>
+      <option value="Factibilidad">Factibilidad</option>
+      <option value="Estudios y Diseños In House">Estudios y Diseños In House</option>
+      <option value="Estructuración">Estructuración</option>
+      <option value="Factibilidad In House">Factibilidad In House</option>
+      <option value="Liquidación">Liquidación</option>
+    </select>
+  </label><br><br>
+  
+  <button type="submit">Guardar Información del Contrato</button>
+</form>
+<div id="msgInformacionContrato"></div>
+<hr>
+<h3>Contratos guardados</h3>
+<table id="tablaContratos" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+  <thead>
+    <tr>
+      <th>No. Contrato</th>
+      <th>Localidad</th>
+      <th>Barrios</th>
+      <th>UPZ</th>
+      <th>Población Beneficiada</th>
+      <th>Fecha Inicio</th>
+      <th>Fecha Final</th>
+      <th>Dirección Punto IDU</th>
+      <th>Teléfono</th>
+      <th>Correo</th>
+      <th>Estado</th>
+      <th>Etapa</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- Choices.js JS -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+  const localidades = [
+    "USAQUÉN","CHAPINERO","SANTA FE","SAN CRISTÓBAL","USME","TUNJUELITO","BOSA","KENNEDY","FONTIBÓN","ENGATIVÁ","SUBA","BARRIOS UNIDOS","TEUSAQUILLO","LOS MÁRTIRES","ANTONIO NARIÑO","PUENTE ARANDA","LA CANDELARIA","RAFAEL URIBE URIBE","CIUDAD BOLÍVAR","SUMAPAZ"
+  ];
+  const barrios = [
+    "LIBERTADOR","CATALINA II","LA HUERTA","ALTOS DEL ZUQUE","LA SABANA","BRISAS ALDEA FONTIBON","BRAVO PAEZ","LA CAMELIA","SENA","SANTO DOMINGO","VILLA ALSACIA II","NUESTRA SENORA DEL ROSARIO","MURILLO TORO","LOS OLIVARES","YOMASA","LA UNION","ANTONIA SANTOS","PARAMO II RURAL","SALAZAR GOMEZ","COLON","MODELIA",
+    // ... Puedes agregar el listado completo aquí
+    "MONTEVIDEO","VERSALLES FONTIBON"
+  ];
+  const upz = [
+    "20 DE JULIO","AEROPUERTO EL DORADO","ALAMOS","ALFONSO LOPEZ","AMERICAS","APOGEO","ARBORIZADORA","BAVARIA","BOLIVIA","BOSA CENTRAL","BOSA OCCIDENTAL","BOYACA REAL","BRITALIA","CALANDAIMA","CAPELLANIA","CARVAJAL","CASA BLANCA SUBA","CASTILLA","CHAPINERO","CHICO LAGO","CIUDAD JARDIN","CIUDAD MONTES","CIUDAD SALITRE OCCIDENTAL","CIUDAD SALITRE ORIENTAL",
+    // ... Puedes agregar el listado completo aquí
+    "VERSALLES FONTIBON"
+  ];
+
+  function cargarContratos() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContrato');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  function cargarLocalidades() {
+    let select = document.getElementById('localidad');
+    select.innerHTML = localidades.map(l => `<option value="${l}">${l}</option>`).join('');
+  }
+  function cargarBarrios() {
+    let select = document.getElementById('barrios');
+    select.innerHTML = barrios.map(b => `<option value="${b}">${b}</option>`).join('');
+  }
+  function cargarUPZ() {
+    let select = document.getElementById('upz');
+    select.innerHTML = upz.map(u => `<option value="${u}">${u}</option>`).join('');
+  }
+
+  cargarContratos();
+  cargarLocalidades();
+  cargarBarrios();
+  cargarUPZ();
+
+  // Choices.js para select buscable/multiple
+  let choicesLocalidad, choicesBarrios, choicesUPZ;
+  document.addEventListener('DOMContentLoaded', function() {
+    choicesLocalidad = new Choices('#localidad', { removeItemButton: true, searchResultLimit: 10, searchEnabled: true, placeholder: true });
+    choicesBarrios = new Choices('#barrios', { removeItemButton: true, searchResultLimit: 10, searchEnabled: true, placeholder: true });
+    choicesUPZ = new Choices('#upz', { removeItemButton: true, searchResultLimit: 10, searchEnabled: true, placeholder: true });
+    mostrarTablaContratos();
+  });
+
+  // Validación tiempo real teléfono
+  document.getElementById('telefonoPuntoIDU').addEventListener('input', function() {
+    const telefono = this.value.trim();
+    const errorSpan = document.getElementById('errorTelefonoIDU');
+    if (!/^[0-9]{7,15}$/.test(telefono)) {
+      errorSpan.textContent = 'El teléfono solo debe contener números y mínimo 7 dígitos.';
+      errorSpan.style.display = 'inline';
+    } else {
+      errorSpan.textContent = '';
+      errorSpan.style.display = 'none';
+    }
+  });
+
+  // Validación tiempo real correo
+  document.getElementById('correoPuntoIDU').addEventListener('input', function() {
+    const correo = this.value.trim();
+    const errorSpan = document.getElementById('errorCorreoIDU');
+    const correoValido = /^[\w\.-]+@[\w\.-]+\.\w+$/.test(correo);
+    if (!correoValido) {
+      errorSpan.textContent = 'Ingrese un correo electrónico válido.';
+      errorSpan.style.display = 'inline';
+    } else {
+      errorSpan.textContent = '';
+      errorSpan.style.display = 'none';
+    }
+  });
+
+  document.getElementById('formInformacionContrato').onsubmit = function(e) {
+    e.preventDefault();
+
+    const telefono = document.getElementById('telefonoPuntoIDU').value.trim();
+    const correo = document.getElementById('correoPuntoIDU').value.trim();
+    const telefonoValido = /^[0-9]{7,15}$/.test(telefono);
+    const correoValido = /^[\w\.-]+@[\w\.-]+\.\w+$/.test(correo);
+
+    if (!telefonoValido) {
+      document.getElementById('msgInformacionContrato').innerHTML = `<span style="color:red">El teléfono solo debe contener números y mínimo 7 dígitos.</span>`;
+      return;
+    }
+    if (!correoValido) {
+      document.getElementById('msgInformacionContrato').innerHTML = `<span style="color:red">Ingrese un correo electrónico válido.</span>`;
+      return;
+    }
+
+    // Obtener seleccionados del Choices.js
+    const localidad = choicesLocalidad.getValue().map(opt => opt.value);
+    const barriosSeleccionados = choicesBarrios.getValue().map(opt => opt.value);
+    const upzSeleccionados = choicesUPZ.getValue().map(opt => opt.value);
+
+    const datos = {
+      noContrato: document.getElementById('noContrato').value,
+      localidad,
+      barrios: barriosSeleccionados,
+      upz: upzSeleccionados,
+      poblacionBeneficiada: document.getElementById('poblacionBeneficiada').value,
+      fechaInicio: document.getElementById('fechaInicio').value,
+      fechaFinal: document.getElementById('fechaFinal').value,
+      direccionPuntoIDU: document.getElementById('direccionPuntoIDU').value,
+      telefonoPuntoIDU: telefono,
+      correoPuntoIDU: correo,
+      estado: document.getElementById('estado').value,
+      etapa: document.getElementById('etapa').value
+    };
+
+    // Guardar en localStorage
+    let infoContratos = JSON.parse(localStorage.getItem('infoContratos') || "[]");
+    const existe = infoContratos.some(c => c.noContrato === datos.noContrato);
+    if (existe) {
+      document.getElementById('msgInformacionContrato').innerHTML = `<span style="color:red">Ya existe información para ese No. Contrato.</span>`;
+      return;
+    }
+    infoContratos.push(datos);
+    localStorage.setItem('infoContratos', JSON.stringify(infoContratos));
+    document.getElementById('msgInformacionContrato').innerHTML = `<b>Información del Contrato guardada correctamente.</b>`;
+    document.getElementById('formInformacionContrato').reset();
+    choicesLocalidad.removeActiveItems();
+    choicesBarrios.removeActiveItems();
+    choicesUPZ.removeActiveItems();
+    cargarContratos();
+    mostrarTablaContratos();
+  };
+
+  function mostrarTablaContratos() {
+    let infoContratos = JSON.parse(localStorage.getItem('infoContratos') || "[]");
+    const tbody = document.querySelector('#tablaContratos tbody');
+    tbody.innerHTML = infoContratos.map(c => `
+      <tr>
+        <td>${c.noContrato}</td>
+        <td>${(c.localidad||[]).join(", ")}</td>
+        <td>${(c.barrios||[]).join(", ")}</td>
+        <td>${(c.upz||[]).join(", ")}</td>
+        <td>${c.poblacionBeneficiada}</td>
+        <td>${c.fechaInicio}</td>
+        <td>${c.fechaFinal}</td>
+        <td>${c.direccionPuntoIDU}</td>
+        <td>${c.telefonoPuntoIDU}</td>
+        <td>${c.correoPuntoIDU}</td>
+        <td>${c.estado}</td>
+        <td>${c.etapa}</td>
+      </tr>
+    `).join('');
+  }
+</script>

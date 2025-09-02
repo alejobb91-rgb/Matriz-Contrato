@@ -1,0 +1,76 @@
+<form id="formPlanesAccion" autocomplete="off">
+  <h3>Planes de Acción</h3>
+  <label>No. Contrato:<br>
+    <select id="noContratoPlanesAccion" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Memorando Entrada:<br>
+    <input type="number" id="memorandoEntradaPlanAccion" min="1" required>
+  </label><br><br>
+  <label>No. Plan de Acción:<br>
+    <input type="number" id="noPlanAccion" min="1" required>
+  </label><br><br>
+  <label>Fecha Plan de Acción:<br>
+    <input type="date" id="fechaPlanAccion" required>
+  </label><br><br>
+  <button type="submit">Guardar Plan de Acción</button>
+</form>
+<div id="msgPlanesAccion"></div>
+<hr>
+<h3>Planes de Acción guardados</h3>
+<table id="tablaPlanesAccion" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+  <thead>
+    <tr>
+      <th>No. Contrato</th>
+      <th>Memorando Entrada</th>
+      <th>No. Plan de Acción</th>
+      <th>Fecha Plan de Acción</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  // Cargar contratos en el select
+  function cargarContratosPlanesAccion() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoPlanesAccion');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  cargarContratosPlanesAccion();
+
+  // Mostrar tabla de planes de acción
+  function mostrarTablaPlanesAccion() {
+    let planes = JSON.parse(localStorage.getItem('planesAccion') || "[]");
+    const tbody = document.querySelector('#tablaPlanesAccion tbody');
+    tbody.innerHTML = planes.map(p => `
+      <tr>
+        <td>${p.noContrato}</td>
+        <td>${p.memorandoEntrada}</td>
+        <td>${p.noPlanAccion}</td>
+        <td>${p.fechaPlanAccion}</td>
+      </tr>
+    `).join('');
+  }
+  mostrarTablaPlanesAccion();
+
+  // Guardar plan de acción en localStorage
+  document.getElementById('formPlanesAccion').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      noContrato: document.getElementById('noContratoPlanesAccion').value,
+      memorandoEntrada: document.getElementById('memorandoEntradaPlanAccion').value,
+      noPlanAccion: document.getElementById('noPlanAccion').value,
+      fechaPlanAccion: document.getElementById('fechaPlanAccion').value
+    };
+    let planes = JSON.parse(localStorage.getItem('planesAccion') || "[]");
+    planes.push(datos);
+    localStorage.setItem('planesAccion', JSON.stringify(planes));
+    document.getElementById('msgPlanesAccion').innerHTML = `<b>Plan de Acción guardado correctamente.</b>`;
+    document.getElementById('formPlanesAccion').reset();
+    cargarContratosPlanesAccion();
+    mostrarTablaPlanesAccion();
+  };
+</script>

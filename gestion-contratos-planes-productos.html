@@ -1,0 +1,158 @@
+<h2>Módulo Gestión Contratos</h2>
+
+<!-- Formulario: Planes de Acción -->
+<form id="formPlanesAccion" autocomplete="off">
+  <h3>Planes de Acción</h3>
+  <label>No. Contrato:<br>
+    <select id="noContratoPlanesAccion" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Nombre del Plan de Acción:<br>
+    <input type="text" id="nombrePlanAccion" required>
+  </label><br><br>
+  <label>Fecha Inicio:<br>
+    <input type="date" id="fechaInicioPlanAccion" required>
+  </label><br><br>
+  <label>Fecha Fin:<br>
+    <input type="date" id="fechaFinPlanAccion" required>
+  </label><br><br>
+  <label>Observaciones:<br>
+    <textarea id="observacionesPlanAccion" required rows="2"></textarea>
+  </label><br><br>
+  <button type="submit">Guardar Plan de Acción</button>
+</form>
+<div id="msgPlanesAccion"></div>
+<hr>
+<h3>Planes de Acción guardados</h3>
+<table id="tablaPlanesAccion" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+  <thead>
+    <tr>
+      <th>No. Contrato</th>
+      <th>Nombre Plan</th>
+      <th>Fecha Inicio</th>
+      <th>Fecha Fin</th>
+      <th>Observaciones</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- Formulario: Productos Entregables -->
+<br>
+<form id="formProductosEntregables" autocomplete="off">
+  <h3>Productos Entregables</h3>
+  <label>No. Contrato:<br>
+    <select id="noContratoProductosEntregables" required>
+      <!-- Opciones generadas dinámicamente con los No. Contrato existentes -->
+    </select>
+  </label><br><br>
+  <label>Nombre Producto Entregable:<br>
+    <input type="text" id="nombreProductoEntregable" required>
+  </label><br><br>
+  <label>Fecha Entrega:<br>
+    <input type="date" id="fechaEntregaProducto" required>
+  </label><br><br>
+  <label>Observaciones:<br>
+    <textarea id="observacionesProductoEntregable" required rows="2"></textarea>
+  </label><br><br>
+  <button type="submit">Guardar Producto Entregable</button>
+</form>
+<div id="msgProductosEntregables"></div>
+<hr>
+<h3>Productos Entregables guardados</h3>
+<table id="tablaProductosEntregables" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+  <thead>
+    <tr>
+      <th>No. Contrato</th>
+      <th>Nombre Producto Entregable</th>
+      <th>Fecha Entrega</th>
+      <th>Observaciones</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  // Funciones para cargar contratos en selects
+  function cargarContratosPlanesAccion() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoPlanesAccion');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  function cargarContratosProductosEntregables() {
+    let contratos = JSON.parse(localStorage.getItem('contratos') || "[]");
+    let select = document.getElementById('noContratoProductosEntregables');
+    select.innerHTML = '<option value="">Seleccione...</option>' +
+      contratos.map(c => `<option value="${c.noContrato}">${c.noContrato}</option>`).join('');
+  }
+  cargarContratosPlanesAccion();
+  cargarContratosProductosEntregables();
+
+  // Mostrar tabla Planes de Acción
+  function mostrarTablaPlanesAccion() {
+    let planes = JSON.parse(localStorage.getItem('planesAccion') || "[]");
+    const tbody = document.querySelector('#tablaPlanesAccion tbody');
+    tbody.innerHTML = planes.map(p => `
+      <tr>
+        <td>${p.noContrato}</td>
+        <td>${p.nombrePlan}</td>
+        <td>${p.fechaInicio}</td>
+        <td>${p.fechaFin}</td>
+        <td>${p.observaciones}</td>
+      </tr>
+    `).join('');
+  }
+  mostrarTablaPlanesAccion();
+
+  document.getElementById('formPlanesAccion').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      noContrato: document.getElementById('noContratoPlanesAccion').value,
+      nombrePlan: document.getElementById('nombrePlanAccion').value.trim(),
+      fechaInicio: document.getElementById('fechaInicioPlanAccion').value,
+      fechaFin: document.getElementById('fechaFinPlanAccion').value,
+      observaciones: document.getElementById('observacionesPlanAccion').value.trim()
+    };
+    let planes = JSON.parse(localStorage.getItem('planesAccion') || "[]");
+    planes.push(datos);
+    localStorage.setItem('planesAccion', JSON.stringify(planes));
+    document.getElementById('msgPlanesAccion').innerHTML = `<b>Plan de Acción guardado correctamente.</b>`;
+    document.getElementById('formPlanesAccion').reset();
+    cargarContratosPlanesAccion();
+    mostrarTablaPlanesAccion();
+  };
+
+  // Mostrar tabla Productos Entregables
+  function mostrarTablaProductosEntregables() {
+    let productos = JSON.parse(localStorage.getItem('productosEntregables') || "[]");
+    const tbody = document.querySelector('#tablaProductosEntregables tbody');
+    tbody.innerHTML = productos.map(p => `
+      <tr>
+        <td>${p.noContrato}</td>
+        <td>${p.nombreProducto}</td>
+        <td>${p.fechaEntrega}</td>
+        <td>${p.observaciones}</td>
+      </tr>
+    `).join('');
+  }
+  mostrarTablaProductosEntregables();
+
+  document.getElementById('formProductosEntregables').onsubmit = function(e) {
+    e.preventDefault();
+    const datos = {
+      noContrato: document.getElementById('noContratoProductosEntregables').value,
+      nombreProducto: document.getElementById('nombreProductoEntregable').value.trim(),
+      fechaEntrega: document.getElementById('fechaEntregaProducto').value,
+      observaciones: document.getElementById('observacionesProductoEntregable').value.trim()
+    };
+    let productos = JSON.parse(localStorage.getItem('productosEntregables') || "[]");
+    productos.push(datos);
+    localStorage.setItem('productosEntregables', JSON.stringify(productos));
+    document.getElementById('msgProductosEntregables').innerHTML = `<b>Producto Entregable guardado correctamente.</b>`;
+    document.getElementById('formProductosEntregables').reset();
+    cargarContratosProductosEntregables();
+    mostrarTablaProductosEntregables();
+  };
+</script>

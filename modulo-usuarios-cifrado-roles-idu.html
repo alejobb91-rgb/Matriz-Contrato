@@ -1,0 +1,201 @@
+<h2>Gestión de Usuarios (Solo Administrador)</h2>
+<div id="usuariosModulo" style="display:none;">
+  <div style="margin-bottom:16px;">
+    <input type="text" id="busquedaUsuario" placeholder="Buscar por nombre o email..." style="width:220px;">
+  </div>
+  <form id="formUsuario" autocomplete="off">
+    <h3 id="tituloFormUsuario">Registrar Nuevo Usuario</h3>
+    <input type="hidden" id="idxUsuarioEditar" value="">
+    <label>Nombre de Usuario:<br>
+      <input type="text" id="nombreUsuario" required>
+    </label><br><br>
+    <label>Email (@idu.gov.co):<br>
+      <input type="email" id="emailUsuario" pattern="^[a-zA-Z0-9._%+-]+@idu\.gov\.co$" required placeholder="usuario@idu.gov.co">
+      <span id="validacionEmail" style="color:red;font-size:12px;"></span>
+    </label><br><br>
+    <label>Rol:<br>
+      <select id="rolUsuario" required>
+        <option value="">Seleccione...</option>
+        <option value="Administrador Principal">Administrador Principal</option>
+        <option value="Coordinador">Coordinador</option>
+        <option value="Social">Social</option>
+        <option value="Solo Vista">Solo Vista</option>
+      </select>
+    </label><br><br>
+    <label>Contraseña:<br>
+      <input type="password" id="passUsuario" required>
+      <span id="validacionPass" style="color:red;font-size:12px;"></span>
+    </label><br><br>
+    <button type="submit" id="btnSubmitUsuario">Registrar Usuario</button>
+    <button type="button" id="btnCancelarEdicion" style="display:none;" onclick="cancelarEdicionUsuario()">Cancelar</button>
+  </form>
+  <div id="msgUsuario"></div>
+  <hr>
+  <h3>Usuarios Registrados</h3>
+  <table id="tablaUsuarios" border="1" cellpadding="4" style="width:100%;font-size:13px;">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  // INTEGRACIÓN LOGIN REAL (SIMULADA)
+  function esAdministrador() {
+    let usuarioActual = JSON.parse(localStorage.getItem('usuarioActual') || '{}');
+    return usuarioActual.rol === 'Administrador Principal';
+  }
+  function mostrarModuloUsuarios() {
+    if (esAdministrador()) {
+      document.getElementById('usuariosModulo').style.display = '';
+    }
+  }
+  mostrarModuloUsuarios();
+
+  // Validación de contraseña fuerte
+  function validarPass(pass) {
+    // Al menos 8 caracteres, 1 número, 1 mayúscula, 1 minúscula, 1 símbolo
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(pass);
+  }
+  document.getElementById('passUsuario').oninput = function() {
+    let pass = this.value;
+    let msg = "";
+    if (!validarPass(pass)) {
+      msg = "Mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 símbolo.";
+    }
+    document.getElementById('validacionPass').innerText = msg;
+  };
+
+  // Validación de email @idu.gov.co
+  document.getElementById('emailUsuario').oninput = function() {
+    let email = this.value;
+    let msg = "";
+    if (!/^[a-zA-Z0-9._%+-]+@idu\.gov\.co$/.test(email)) {
+      msg = "El correo debe tener la forma usuario@idu.gov.co";
+    }
+    document.getElementById('validacionEmail').innerText = msg;
+  };
+
+  // Búsqueda de usuarios
+  document.getElementById('busquedaUsuario').oninput = function() {
+    mostrarTablaUsuarios(this.value.trim().toLowerCase());
+  };
+
+  // Mostrar tabla usuarios (filtro búsqueda)
+  function mostrarTablaUsuarios(filtro = "") {
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    if (filtro) {
+      usuarios = usuarios.filter(u =>
+        u.nombre.toLowerCase().includes(filtro) ||
+        u.email.toLowerCase().includes(filtro)
+      );
+    }
+    const tbody = document.querySelector('#tablaUsuarios tbody');
+    tbody.innerHTML = usuarios.map((u, idx) => `
+      <tr>
+        <td>${u.nombre}</td>
+        <td>${u.email}</td>
+        <td>${u.rol}</td>
+        <td>
+          <button onclick="editarUsuario(${idx})">Editar</button>
+          <button onclick="eliminarUsuario(${idx})">Eliminar</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  mostrarTablaUsuarios();
+
+  // SHA-256 hashing función
+  async function sha256(text) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Guardar/editar usuario con contraseña cifrada
+  document.getElementById('formUsuario').onsubmit = async function(e) {
+    e.preventDefault();
+    const idxEditar = document.getElementById('idxUsuarioEditar').value;
+    const nombre = document.getElementById('nombreUsuario').value.trim();
+    const email = document.getElementById('emailUsuario').value.trim();
+    const rol = document.getElementById('rolUsuario').value;
+    const pass = document.getElementById('passUsuario').value;
+
+    if (!/^[a-zA-Z0-9._%+-]+@idu\.gov\.co$/.test(email)) {
+      document.getElementById('validacionEmail').innerText = "El correo debe tener la forma usuario@idu.gov.co";
+      return;
+    }
+    if (!validarPass(pass)) {
+      document.getElementById('validacionPass').innerText = "La contraseña no cumple los requisitos.";
+      return;
+    }
+
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    const passHash = await sha256(pass);
+    if (idxEditar !== "") {
+      // Email duplicado (excepto propio)
+      if (usuarios.some((u, idx) => u.email === email && idx != idxEditar)) {
+        document.getElementById('msgUsuario').innerHTML = `<span style="color:red">El email ya está registrado.</span>`;
+        return;
+      }
+      usuarios[idxEditar] = { nombre, email, rol, passHash };
+      document.getElementById('msgUsuario').innerHTML = `<span style="color:green">Usuario editado correctamente.</span>`;
+    } else {
+      if (usuarios.some(u => u.email === email)) {
+        document.getElementById('msgUsuario').innerHTML = `<span style="color:red">El email ya está registrado.</span>`;
+        return;
+      }
+      usuarios.push({ nombre, email, rol, passHash });
+      document.getElementById('msgUsuario').innerHTML = `<span style="color:green">Usuario registrado correctamente.</span>`;
+    }
+    localStorage.setItem('usuariosApp', JSON.stringify(usuarios));
+    document.getElementById('formUsuario').reset();
+    cancelarEdicionUsuario();
+    mostrarTablaUsuarios(document.getElementById('busquedaUsuario').value.trim().toLowerCase());
+  };
+
+  // Eliminar usuario
+  function eliminarUsuario(idx) {
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    if (confirm('¿Seguro que desea eliminar este usuario?')) {
+      usuarios.splice(idx, 1);
+      localStorage.setItem('usuariosApp', JSON.stringify(usuarios));
+      mostrarTablaUsuarios(document.getElementById('busquedaUsuario').value.trim().toLowerCase());
+    }
+  }
+
+  // Editar usuario
+  window.editarUsuario = function(idx) {
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    const u = usuarios[idx];
+    document.getElementById('nombreUsuario').value = u.nombre;
+    document.getElementById('emailUsuario').value = u.email;
+    document.getElementById('rolUsuario').value = u.rol;
+    document.getElementById('passUsuario').value = ""; // Nunca mostramos la contraseña real ni el hash
+    document.getElementById('idxUsuarioEditar').value = idx;
+    document.getElementById('tituloFormUsuario').innerText = "Editar Usuario";
+    document.getElementById('btnSubmitUsuario').innerText = "Guardar Cambios";
+    document.getElementById('btnCancelarEdicion').style.display = "";
+    document.getElementById('validacionPass').innerText = "";
+    document.getElementById('validacionEmail').innerText = "";
+  };
+
+  // Cancelar edición
+  window.cancelarEdicionUsuario = function() {
+    document.getElementById('formUsuario').reset();
+    document.getElementById('idxUsuarioEditar').value = "";
+    document.getElementById('tituloFormUsuario').innerText = "Registrar Nuevo Usuario";
+    document.getElementById('btnSubmitUsuario').innerText = "Registrar Usuario";
+    document.getElementById('btnCancelarEdicion').style.display = "none";
+    document.getElementById('validacionPass').innerText = "";
+    document.getElementById('validacionEmail').innerText = "";
+    document.getElementById('msgUsuario').innerHTML = "";
+  };
+</script>

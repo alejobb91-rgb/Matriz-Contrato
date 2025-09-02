@@ -1,0 +1,69 @@
+<h2>Login de Usuarios</h2>
+<form id="formLogin" autocomplete="off">
+  <label>Email (@idu.gov.co):<br>
+    <input type="email" id="loginEmail" pattern="^[a-zA-Z0-9._%+-]+@idu\.gov\.co$" required placeholder="usuario@idu.gov.co">
+    <span id="validacionLoginEmail" style="color:red;font-size:12px;"></span>
+  </label><br><br>
+  <label>Contraseña:<br>
+    <input type="password" id="loginPass" required>
+    <span id="validacionLoginPass" style="color:red;font-size:12px;"></span>
+  </label><br><br>
+  <button type="submit">Ingresar</button>
+</form>
+<div id="msgLogin"></div>
+
+<script>
+  // Validación de email @idu.gov.co
+  document.getElementById('loginEmail').oninput = function() {
+    let email = this.value;
+    let msg = "";
+    if (!/^[a-zA-Z0-9._%+-]+@idu\.gov\.co$/.test(email)) {
+      msg = "El correo debe tener la forma usuario@idu.gov.co";
+    }
+    document.getElementById('validacionLoginEmail').innerText = msg;
+  };
+
+  // SHA-256 hashing función
+  async function sha256(text) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Validar login
+  document.getElementById('formLogin').onsubmit = async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    document.getElementById('msgLogin').innerHTML = "";
+    document.getElementById('validacionLoginEmail').innerText = "";
+    document.getElementById('validacionLoginPass').innerText = "";
+
+    if (!/^[a-zA-Z0-9._%+-]+@idu\.gov\.co$/.test(email)) {
+      document.getElementById('validacionLoginEmail').innerText = "El correo debe tener la forma usuario@idu.gov.co";
+      return;
+    }
+    if (!pass) {
+      document.getElementById('validacionLoginPass').innerText = "Ingrese la contraseña.";
+      return;
+    }
+
+    let usuarios = JSON.parse(localStorage.getItem('usuariosApp') || "[]");
+    let usuario = usuarios.find(u => u.email === email);
+    if (!usuario) {
+      document.getElementById('msgLogin').innerHTML = `<span style="color:red">Usuario no registrado.</span>`;
+      return;
+    }
+    const passHash = await sha256(pass);
+    if (usuario.passHash !== passHash) {
+      document.getElementById('msgLogin').innerHTML = `<span style="color:red">Contraseña incorrecta.</span>`;
+      return;
+    }
+    // Login exitoso: guardar sesión y redirigir (o mostrar menú)
+    localStorage.setItem('usuarioActual', JSON.stringify({ email: usuario.email, rol: usuario.rol, nombre: usuario.nombre }));
+    document.getElementById('msgLogin').innerHTML = `<span style="color:green">Bienvenido, ${usuario.nombre} (${usuario.rol})</span>`;
+    // Puedes redirigir aquí o mostrar el menú de usuario
+    // window.location.href = "home.html";
+  };
+</script>
